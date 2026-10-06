@@ -1,0 +1,108 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>GE 1102 Midterm Exam – Understanding the Self</title><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><style>
+:root{--bg:#f4f6fb;--cd:#fff;--tx:#1b1f2a;--mu:#586174;--ac:#2f5fd0;--bd:#d3d8e4;--bad:#c62828;--ok:#2e7d32;--sel:#e6edff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161c;--cd:#1d2029;--tx:#e8eaf0;--mu:#a3abbd;--ac:#7aa2ff;--bd:#343a4a;--bad:#ff8a80;--ok:#81c784;--sel:#27304a}}
+:root[data-theme="dark"]{--bg:#14161c;--cd:#1d2029;--tx:#e8eaf0;--mu:#a3abbd;--ac:#7aa2ff;--bd:#343a4a;--bad:#ff8a80;--ok:#81c784;--sel:#27304a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 Arial,Helvetica,sans-serif}
+#app{max-width:860px;margin:0 auto;padding:14px}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:17px;margin:0 0 8px}.mu{color:var(--mu);font-size:14px}
+input,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font:inherit;margin:3px 0 10px}
+button{font:inherit;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:7px;padding:9px 16px;cursor:pointer}
+button.g{background:transparent;color:var(--ac)}button.d{background:var(--bad);border-color:var(--bad)}button:disabled{opacity:.5}
+.opt{display:block;width:100%;text-align:left;background:var(--cd);color:var(--tx);border:1px solid var(--bd);margin:7px 0;padding:11px 12px}
+.opt.on{background:var(--sel);border-color:var(--ac);font-weight:bold}
+#hd{position:sticky;top:0;z-index:5;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:12px}
+.tm{font-size:22px;font-weight:bold;font-variant-numeric:tabular-nums}.tm.low{color:var(--bad)}
+.grid{display:flex;flex-wrap:wrap;gap:5px}.grid button{width:38px;padding:5px 0;background:var(--cd);color:var(--tx);border-color:var(--bd);font-size:13px}.grid button.a{background:var(--sel);border-color:var(--ac)}.grid button.c{outline:2px solid var(--ac)}
+.nx{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+#ov{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;align-items:center;justify-content:center;padding:20px;text-align:center}
+#wm{position:fixed;inset:0;pointer-events:none;z-index:40}
+.ex *{user-select:none;-webkit-user-select:none}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border:1px solid var(--bd);padding:4px 6px;text-align:left}.sc{overflow-x:auto}
+@media print{body{display:none}}
+</style></head><body><div id="app"></div><div id="ov"></div><div id="wm"></div><script>
+const PTS=2;let N=0,CFG={minutes:60,maxViol:3},LAY=[],S=null,cur=0,live=false,tid=null,fs=false,off=0,code='',saving=false,dirty=false,st=0,last=0,dbBad=false;
+const $=s=>document.querySelector(s),app=$('#app'),sleep=t=>new Promise(r=>setTimeout(r,t));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls={g(){return null},s(){}};
+const fmt=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const when=t=>t?new Date(t).toLocaleString():'—';
+async function api(b){const r=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const j=await r.json().catch(()=>({error:'Bad response'}));if(!r.ok)throw new Error(j.error||'Error');return j}
+(async()=>{app.innerHTML='<div class="cd">Loading…</div>';try{CFG=await api({action:'info'})}catch(e){}intro()})();
+
+function intro(){
+ const n=Date.now(),cl=CFG.closes&&n>CFG.closes,nt=CFG.opens&&n<CFG.opens;
+ app.innerHTML=`<div class="cd"><h1>GE 1102 – Understanding the Self</h1><div class="mu">Midterm Examination · Southern Leyte State University – Hinunangan Campus</div></div>
+ <div class="cd"><h2>Exam details</h2><div>${CFG.items||50} multiple-choice items · ${(CFG.items||50)*PTS} points · <b>${CFG.minutes} minutes</b> once you press Start · <b>ONE attempt only</b>.${CFG.closes?'<br>Closes: '+when(CFG.closes):''}</div>
+ <h2 style="margin-top:14px">Rules</h2><ul class="mu" style="margin:0;padding-left:20px">
+ <li>The timer runs on the <b>server</b>. It starts when you press Start and cannot be paused, reset or extended. Refreshing or reopening the page does not restart it.</li>
+ <li>Do not switch tabs/apps, leave the window, exit full screen, copy, paste, print, or screenshot. Each tab or window switch is a <b>strike</b>; <b>${CFG.maxViol} strikes auto-submit</b> your exam.</li>
+ <li>Questions and choices are shuffled per student, and your name and ID are watermarked on every screen.</li>
+ <li>All activity is logged and reviewed by your instructor. Your score is released by your instructor.</li></ul></div>
+ ${cl?'<div class="cd" style="color:var(--bad)"><b>This exam is already closed.</b></div>':nt?'<div class="cd"><b>This exam opens on '+when(CFG.opens)+'.</b></div>':`<div class="cd"><label>Access code (given by your instructor)<input id="cd" autocomplete="off" placeholder="XXXX-XXXX"></label><label>Full name<input id="nm" autocomplete="off"></label><label>Student ID<input id="sid" autocomplete="off"></label><label>Course / Year &amp; Section<input id="sec" autocomplete="off"></label>
+ <label><input type="checkbox" id="pl" style="width:auto;margin-right:8px">I will answer honestly, using no notes, people, websites or AI tools, and I understand my activity is monitored.</label>
+ <div id="er" style="color:var(--bad);min-height:20px"></div><button id="go">Start exam</button></div>`}`;
+ const g=$('#go');if(g)g.onclick=async()=>{const c=$('#cd').value.trim().toUpperCase(),nm=$('#nm').value.trim(),sid=$('#sid').value.trim(),sec=$('#sec').value.trim();
+  if(!c||!nm||!sid||!sec)return $('#er').textContent='Please complete all fields.';if(!$('#pl').checked)return $('#er').textContent='Please accept the honesty pledge.';
+  reqFS();g.disabled=true;$('#er').textContent='Starting…';
+  try{const r=await api({action:'start',code:c,name:nm,sid,sec});code=c;
+   if(r.status==='submitted'){S={name:r.name||nm,sid:r.sid||sid,submitted:true,submittedAt:r.submittedAt,reason:r.reason||''};try{document.exitFullscreen()}catch(e){}return done()}
+   begin(r)}catch(e){try{if(document.fullscreenElement)document.exitFullscreen()}catch(x){}$('#er').textContent=e.message;g.disabled=false}}}
+
+function begin(r){
+ S={name:r.name,sid:r.sid,answers:r.answers||{},ev:r.ev||[],strikes:r.strikes||0,submitted:false,deadline:r.startedAt+r.minutes*60000};
+ CFG.minutes=r.minutes;CFG.maxViol=r.maxViol;LAY=r.questions;N=LAY.length;off=r.serverNow-Date.now();cur=0;live=true;
+ if(r.resumed)S.ev.push({t:Date.now(),k:'resumed',s:0});
+ $('#wm').style.backgroundImage='url("data:image/svg+xml,'+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='270' height='150'><text x='8' y='85' transform='rotate(-24 135 75)' font-size='15' font-family='Arial' fill='gray' fill-opacity='.2'>${esc(S.name)} • ${esc(S.sid)}</text></svg>`)+'")';
+ document.body.classList.add('ex');app.innerHTML='<div id="hd"></div><div id="bd"></div>';tick();clearInterval(tid);tid=setInterval(tick,1000);if(!window.hb)window.hb=setInterval(()=>{if(live)save()},30000);draw();guards()}
+
+function tick(){ if(!S||S.submitted)return;const left=S.deadline-(Date.now()+off);if(left<=0)return submit('Time expired (auto-submitted)');
+ const n=Object.keys(S.answers).length;
+ $('#hd').innerHTML=`<div><b>${esc(S.name)}</b><div class="mu">Answered ${n} / ${N}${dbBad?' · <span style="color:var(--bad)">connection problem – retrying</span>':''}</div></div><div class="mu">Strikes: <b style="color:${S.strikes?'var(--bad)':'inherit'}">${S.strikes}/${CFG.maxViol}</b></div><div class="tm ${left<300000?'low':''}">${fmt(left)}</div>`}
+
+function draw(){ const q=LAY[cur],sel=S.answers[q.id];
+ $('#bd').innerHTML=`<div class="cd"><div class="mu">Question ${cur+1} of ${N}</div><h2 style="font-size:18px;margin:6px 0 10px">${esc(q.q)}</h2>
+ ${q.o.map((o,i)=>`<button class="opt ${sel===o?'on':''}" data-i="${i}"><b>${'ABCD'[i]}.</b> ${esc(o)}</button>`).join('')}
+ <div class="nx"><button class="g" id="pv" ${cur?'':'disabled'}>◀ Previous</button><button id="nxt" ${cur<N-1?'':'disabled'}>Next ▶</button></div></div>
+ <div class="cd"><div class="grid">${LAY.map((x,i)=>`<button data-g="${i}" class="${S.answers[x.id]?'a':''} ${i==cur?'c':''}">${i+1}</button>`).join('')}</div>
+ <div style="margin-top:12px"><button class="d" id="sb">Submit exam</button> <span id="sm" class="mu"></span></div></div>`;
+ $('#bd').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{S.answers[q.id]=q.o[+b.dataset.i];ls.s('uts_att_'+uid,JSON.stringify(S));soon();draw();tick()});
+ $('#bd').querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{cur=+b.dataset.g;draw()});
+ $('#pv').onclick=()=>{cur--;draw()};$('#nxt').onclick=()=>{cur++;draw()};
+ $('#sb').onclick=function(){const left=N-Object.keys(S.answers).length;if(this.dataset.c){submit('Submitted by student')}else{this.dataset.c=1;this.textContent='Click again to confirm submit';$('#sm').textContent=left?left+' unanswered item(s).':'All items answered.'}}}
+
+
+async function save(){ if(!S||S.submitted||!code)return;dirty=true;if(saving)return;saving=true;
+ try{while(dirty){dirty=false;const r=await api({action:'save',code,answers:S.answers,ev:S.ev,strikes:S.strikes});dbBad=false;
+  if(r.submitted&&!S.submitted){S.submitted=true;S.reason=r.reason;S.submittedAt=r.submittedAt;S.sent=true;live=false;clearInterval(tid);document.body.classList.remove('ex');$('#ov').style.display='none';saving=false;return done()}}}
+ catch(e){dbBad=true}finally{saving=false}}
+function soon(){clearTimeout(st);st=setTimeout(save,1000)}
+async function send(){for(let i=0;i<6;i++){try{const x=await api({action:'submit',code,answers:S.answers,ev:S.ev,strikes:S.strikes,reason:S.reason});S.sent=true;S.reason=x.reason||S.reason;S.submittedAt=x.submittedAt||S.submittedAt;return}catch(e){await sleep(1500)}}S.sent=false}
+async function submit(r){ if(!S||S.submitted)return;S.submitted=true;S.reason=r;S.submittedAt=Date.now();live=false;clearInterval(tid);clearTimeout(st);document.body.classList.remove('ex');$('#ov').style.display='none';
+ try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}await send();done()}
+function done(){ $('#wm').style.backgroundImage='';
+ app.innerHTML=`<div class="cd"><h1>Exam submitted ✔</h1><p>${esc(S.name)} (${esc(S.sid)}) · ${when(S.submittedAt)}<br><span class="mu">${esc(S.reason||'')}</span></p>
+ ${S.sent===false?'<p style="color:var(--bad)"><b>Your answers could not be sent.</b> Keep this page open, check your internet connection, and press Retry.</p><button id="rt2">Retry sending</button>':'<p>Your answers have been recorded. Your score will be released by your instructor after review. You may close this page.</p>'}</div>`;
+ const b=$('#rt2');if(b)b.onclick=async()=>{b.disabled=true;await send();done()}}
+
+/* ---------- integrity guards ---------- */
+function ov(msg){const o=$('#ov');o.innerHTML=`<div class="cd" style="max-width:480px"><h1 style="color:var(--bad)">⚠ Warning</h1><p>${msg}</p><button id="rt">Return to exam</button></div>`;o.style.display='flex';$('#rt').onclick=()=>{o.style.display='none';reqFS()}}
+function strike(k,label){ if(!live||!S||S.submitted)return;const n=Date.now();if(n-last<1500)return;last=n;S.strikes++;S.ev.push({t:n,k,s:1});save();
+ if(S.strikes>=CFG.maxViol)return submit('Auto-submitted: '+S.strikes+' integrity violations');
+ ov(`Strike ${S.strikes} of ${CFG.maxViol}: ${label}. At ${CFG.maxViol} strikes your exam is submitted automatically. The timer is still running.`)}
+function note(k){if(!live||!S)return;S.ev.push({t:Date.now(),k,s:0});soon()}
+function reqFS(){try{const e=document.documentElement,f=e.requestFullscreen||e.webkitRequestFullscreen;if(f)Promise.resolve(f.call(e)).then(()=>fs=true).catch(()=>{})}catch(x){}}
+let gOn=false,bt=0;
+function guards(){ if(gOn)return;gOn=true;
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)strike('tab-switch','you left the exam tab')});
+ window.addEventListener('blur',()=>{clearTimeout(bt);bt=setTimeout(()=>strike('window-blur','the exam window lost focus'),2000)});
+ window.addEventListener('focus',()=>clearTimeout(bt));
+ document.addEventListener('fullscreenchange',()=>{if(document.fullscreenElement)fs=true;else if(fs){fs=false;strike('exit-fullscreen','you exited full screen')}});
+ ['copy','cut','paste','contextmenu','dragstart','selectstart'].forEach(e=>document.addEventListener(e,x=>{if(!live)return;x.preventDefault();if(e!=='selectstart')note(e)},true));
+ window.addEventListener('beforeprint',()=>note('print-attempt'));
+ document.addEventListener('keydown',x=>{if(!live)return;const k=x.key.toLowerCase(),m=x.ctrlKey||x.metaKey;
+  if(k==='printscreen'){try{navigator.clipboard.writeText('')}catch(e){}note('printscreen');x.preventDefault()}
+  else if(k==='f12'||(m&&x.shiftKey&&['i','j','c'].includes(k))||(m&&['c','v','x','p','s','u','a','f'].includes(k))){x.preventDefault();note('blocked-key:'+k)}},true)}
+
+
+</script></body></html>

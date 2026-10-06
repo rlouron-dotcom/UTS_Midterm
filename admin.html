@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Instructor – UTS Exam</title><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex">
+<style>
+:root{--bg:#f4f6fb;--cd:#fff;--tx:#1b1f2a;--mu:#586174;--ac:#2f5fd0;--bd:#d3d8e4;--bad:#c62828;--ok:#2e7d32;--sel:#e6edff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161c;--cd:#1d2029;--tx:#e8eaf0;--mu:#a3abbd;--ac:#7aa2ff;--bd:#343a4a;--bad:#ff8a80;--ok:#81c784;--sel:#27304a}}
+:root[data-theme="dark"]{--bg:#14161c;--cd:#1d2029;--tx:#e8eaf0;--mu:#a3abbd;--ac:#7aa2ff;--bd:#343a4a;--bad:#ff8a80;--ok:#81c784;--sel:#27304a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 Arial,Helvetica,sans-serif}
+#app{max-width:860px;margin:0 auto;padding:14px}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:17px;margin:0 0 8px}.mu{color:var(--mu);font-size:14px}
+input,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font:inherit;margin:3px 0 10px}
+button{font:inherit;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:7px;padding:9px 16px;cursor:pointer}
+button.g{background:transparent;color:var(--ac)}button.d{background:var(--bad);border-color:var(--bad)}button:disabled{opacity:.5}
+.opt{display:block;width:100%;text-align:left;background:var(--cd);color:var(--tx);border:1px solid var(--bd);margin:7px 0;padding:11px 12px}
+.opt.on{background:var(--sel);border-color:var(--ac);font-weight:bold}
+#hd{position:sticky;top:0;z-index:5;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:12px}
+.tm{font-size:22px;font-weight:bold;font-variant-numeric:tabular-nums}.tm.low{color:var(--bad)}
+.grid{display:flex;flex-wrap:wrap;gap:5px}.grid button{width:38px;padding:5px 0;background:var(--cd);color:var(--tx);border-color:var(--bd);font-size:13px}.grid button.a{background:var(--sel);border-color:var(--ac)}.grid button.c{outline:2px solid var(--ac)}
+.nx{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+#ov{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;align-items:center;justify-content:center;padding:20px;text-align:center}
+#wm{position:fixed;inset:0;pointer-events:none;z-index:40}
+.ex *{user-select:none;-webkit-user-select:none}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{border:1px solid var(--bd);padding:4px 6px;text-align:left}.sc{overflow-x:auto}
+@media print{body{display:none}}
+</style></head><body><div id="app"></div><script>
+const $=s=>document.querySelector(s),app=$('#app');let pw=sessionStorage.getItem('pw')||'';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function call(b){const r=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...b,pw})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Error');return j}
+function login(m){app.innerHTML=`<div class="cd"><h1>Instructor login</h1><input id="p" type="password" placeholder="Admin password"><div style="color:var(--bad)">${esc(m||'')}</div><button id="b">Sign in</button></div>`;
+ const go=async()=>{pw=$('#p').value;try{await call({action:'list'});sessionStorage.setItem('pw',pw);load()}catch(e){login(e.message)}};$('#b').onclick=go;$('#p').onkeydown=e=>{if(e.key==='Enter')go()}}
+async function load(){let d;try{d=await call({action:'list'})}catch(e){return login(e.message)}
+ const R=d.rows,sub=R.filter(r=>r.status==='submitted'),sc=sub.map(r=>r.score),avg=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):'–';
+ const csv='No.,Code,Name,Student ID,Section,Score,Strikes,Minutes,Status,Reason\n'+R.map(r=>[r.n,r.code,r.name,r.sid,r.sec,r.score,r.strikes,r.min,r.status,r.reason].map(x=>'"'+String(x??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+ app.innerHTML=`<div class="cd"><h1>Instructor dashboard</h1><div class="mu">Submitted: <b>${sub.length}</b> / ${R.length} · In progress: ${R.filter(r=>r.status==='in progress').length} · Not started: ${R.filter(r=>r.status==='not started').length} · Average score: <b>${avg}</b> / ${d.total}</div><button id="rf" class="g" style="margin-top:8px">Refresh</button></div>
+ <div class="cd"><div class="sc"><table><tr><th>#</th><th>Code</th><th>Name</th><th>ID</th><th>Section</th><th>Score</th><th>Strikes</th><th>Min</th><th>Status</th><th>Log (strikes / events)</th><th></th></tr>
+ ${R.map((r,i)=>`<tr><td>${r.n}</td><td>${esc(r.code)}</td><td>${esc(r.name)}</td><td>${esc(r.sid)}</td><td>${esc(r.sec)}</td><td><b>${r.status==='not started'?'':esc(r.score)}</b></td><td>${r.strikes??''}</td><td>${r.min??''}</td><td>${esc(r.status)}<br>${esc(r.reason)}</td>
+ <td>${r.ev?(r.ev.filter(e=>e.s).length+' / '+r.ev.length+'<br>'+esc([...new Set(r.ev.map(e=>e.k))].slice(0,6).join(', '))):''}</td><td>${r.status==='not started'?'':`<button class="g" data-r="${i}">Reset</button>`}</td></tr>`).join('')}</table></div></div>
+ <div class="cd"><h2>CSV export</h2><textarea readonly rows="5" onclick="this.select()">${esc(csv)}</textarea><div class="mu">Reset deletes an attempt so that student can start over with the same code (e.g., after a crash). Confirm by clicking twice.</div></div>`;
+ $('#rf').onclick=load;app.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{if(b.dataset.s!=='1'){b.dataset.s='1';b.textContent='Confirm?';return}await call({action:'reset',code:R[+b.dataset.r].code});load()})}
+if(pw)load();else login();
+</script></body></html>
